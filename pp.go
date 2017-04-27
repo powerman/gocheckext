@@ -7,12 +7,13 @@ import (
 )
 
 var (
-	// Value for github.com/go-test/deep.LogErrors while DeepEqualsPP.
+	// DeepLogErrors is a value for github.com/go-test/deep.LogErrors
+	// while DeepEqualsPP.
 	// In tests it's better to know when your DeepEqual check skip to
 	// compare something.
 	DeepLogErrors = true
-	// Value for github.com/go-test/deep.CompareUnexportedFields while
-	// DeepEqualsPP.
+	// DeepCompareUnexportedFields is a value for
+	// github.com/go-test/deep.CompareUnexportedFields while DeepEqualsPP.
 	// In tests it's usual to compare unexported fields.
 	DeepCompareUnexportedFields = true
 )
