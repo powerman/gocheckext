@@ -1,6 +1,7 @@
 package gocheckext
 
 import (
+	"fmt"
 	"testing"
 
 	"gopkg.in/check.v1"
@@ -25,13 +26,10 @@ func init() {
 	check.Panics = CountChecker(check.Panics)
 }
 
-var (
-	checksPassed int
-	checksFailed int
-)
+var checksCount int
 
 // CountingTestingT should be called instead of gocheck's TestingT.
-// It will report count of passed/failed checks (like DeepEquals or IsNil)
+// It will report count of executed checks (like DeepEquals or IsNil)
 // after usual TestingT report of passed/failed tests - so you can see how
 // many real tests you've implemented so far.
 //
@@ -40,27 +38,15 @@ var (
 // Then run `go test` as usually and you'll see count of checks after
 // count of tests, for ex.:
 //
-//   OOPS: 20 passed, 3 skipped, 1 FAILED
-//   Checks: 196 passed, 1 failed
-//   --- FAIL: Test (0.56s)
-//
 //   OK: 21 passed, 3 skipped
-//   Checks: 197 passed
+//   Checks: 197
 //   --- PASS: Test (0.49s)
 //
 func CountingTestingT(t *testing.T) {
 	check.TestingT(t)
-	reportChecksCount()
-}
 
-func reportChecksCount() {
-	if checksFailed == 0 {
-		println("Checks:", checksPassed, "passed")
-	} else {
-		println("Checks:", checksPassed, "passed,", checksFailed, "failed")
-	}
-	checksPassed = 0
-	checksFailed = 0
+	fmt.Println("Checks:", checksCount)
+	checksCount = 0
 }
 
 type countingChecker struct {
@@ -70,16 +56,9 @@ type countingChecker struct {
 
 func (c countingChecker) Info() *check.CheckerInfo { return c.info }
 func (c countingChecker) Check(params []interface{}, names []string) (result bool, err string) {
-	curPASS, curFAIL := checksPassed, checksFailed // protect against recursive counting checkers
-	result, err = c.code(params, names)
-	if result {
-		checksPassed = curPASS + 1
-		checksFailed = curFAIL
-	} else {
-		checksPassed = curPASS
-		checksFailed = curFAIL + 1
-	}
-	return
+	// protect counter in case of recursive countingChecker
+	defer func(prev int) { checksCount = prev + 1 }(checksCount)
+	return c.code(params, names)
 }
 
 // CountChecker wrap usual Checker to count it calls. You should use it
